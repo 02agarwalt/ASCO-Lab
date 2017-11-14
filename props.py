@@ -128,6 +128,7 @@ class PROPSAgent(Agent):
         return self.model.layers[:]
          
     def backward(self, reward, terminal):
+	#print(self.episode)
         self.memory.append(self.recent_observation, self.recent_action, reward, terminal, training=self.training)
 
         metrics = [np.nan for _ in self.metrics_names]
@@ -142,7 +143,7 @@ class PROPSAgent(Agent):
 
             #if self.step > self.nb_steps_warmup and self.episode % self.train_interval == 0:
             #if len(self.memory.total_rewards.data) == self.batch_size:
-            if self.episode % self.batch_size == 0:
+            if self.episode % self.batch_size == 0 and self.episode > 0:
                 params, reward_totals = self.memory.sample(self.batch_size)
                 ths = np.array(params)
                 ys = np.array(reward_totals)
@@ -207,6 +208,7 @@ class PROPSAgent(Agent):
 
     def _on_train_end(self):
         self.choose_weights()
+	self.training = False
 
     @property
     def metrics_names(self):

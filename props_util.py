@@ -55,6 +55,8 @@ def renyii(pk0, pk1, a):
 
     Sa = (1 - a) * pk0.S + a * pk1.S
     # make sure eigenvalues are positive
+    if np.any(np.isfinite(Sa) == 0):
+	print(Sa)
     w, v = np.linalg.eig(Sa)
     #assert(np.all(w > 0))
     assert np.linalg.det(Sa) != 0
