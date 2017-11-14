@@ -47,6 +47,7 @@ def renyii(pk0, pk1, a):
     """
     Compute the renyii divergence between two Gaussian distributions.
     """
+
     # Check dimensions
     assert(pk0.S.shape == pk1.S.shape)
     # Check diagonal
@@ -252,6 +253,7 @@ def dist_bound_robust(
 
     wss = np.exp(log_ps - log_p0s)
     if options.get('truncate_weights'):
+	#print("truncating")
         truncate_thresh = options.get('truncate_thresh')
         if truncate_thresh == None:
             # truncate weights based on 
@@ -379,14 +381,18 @@ def dist_jha_grad(a, pk, pks, Jss, kss, options):
         normalized_ws = M * ws / sum_ws
 
         dlts = dlogtrunc(a * Jss * normalized_ws)
+ 
+        #dwdms = dpdms / p0s[:, :, np.newaxis]
+        dwdms = np.sign(dpdms) * np.exp(np.log(np.abs(dpdms)) - log_p0s[:, :, np.newaxis])
+        dwdSs = np.sign(dpdSs) * np.exp(np.log(np.abs(dpdSs)) - log_p0s[:, :, np.newaxis])
 
-        sum_dwdms = np.sum(dpdms / p0s[:, :, np.newaxis], axis=1)
-        sum_dwdSs = np.sum(dpdSs / p0s[:, :, np.newaxis], axis=1)
+        sum_dwdms = np.sum(dwdms, axis=1)
+        sum_dwdSs = np.sum(dwdSs, axis=1)
         dlt_times_J = dlts * Jss
         djdm = np.sum(dlt_times_J[:, :, np.newaxis] * 
-            (sum_ws[:, :, np.newaxis] * dpdms / p0s[:, :, np.newaxis] - ws[:, :, np.newaxis] * sum_dwdms[:, np.newaxis, :]) / sum_ws[:, :, np.newaxis]**2, axis=(0, 1)) / L
+            (sum_ws[:, :, np.newaxis] * dwdms - ws[:, :, np.newaxis] * sum_dwdms[:, np.newaxis, :]) / sum_ws[:, :, np.newaxis]**2, axis=(0, 1)) / L
         djdS = np.sum(dlt_times_J[:, :, np.newaxis] * 
-            (sum_ws[:, :, np.newaxis] * dpdSs / p0s[:, :, np.newaxis] - ws[:, :, np.newaxis] * sum_dwdSs[:, np.newaxis, :]) / sum_ws[:, :, np.newaxis]**2, axis=(0, 1)) / L
+            (sum_ws[:, :, np.newaxis] * dwdSs - ws[:, :, np.newaxis] * sum_dwdSs[:, np.newaxis, :]) / sum_ws[:, :, np.newaxis]**2, axis=(0, 1)) / L
         Jws = Jss * normalized_ws
     else:
         dlts = dlogtrunc(a * Jss * ws)
@@ -400,7 +406,7 @@ def dist_jha_grad(a, pk, pks, Jss, kss, options):
 
     djda = -np.sum(logtrunc(a * Jws)) / (a**2 * L * M) + \
         np.sum(dlts * Jws) / (a * L * M)
-
+    
     return djdm, djdS, djda
 
 

@@ -145,9 +145,11 @@ class PROPSAgent(Agent):
             #if len(self.memory.total_rewards.data) == self.batch_size:
             if self.episode % self.batch_size == 0 and self.episode > 0:
                 params, reward_totals = self.memory.sample(self.batch_size)
+		#print(params, reward_totals)
                 ths = np.array(params)
                 ys = np.array(reward_totals)
-                ys_trans = -np.array([ys])
+                #ys_trans = -np.array([ys])
+		ys_trans = (200 - np.array([ys]))/20
                 ths_trans = np.array([ths]).transpose(2, 1, 0)
 
                 if self.yss is None:
