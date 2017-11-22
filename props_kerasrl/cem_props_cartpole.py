@@ -17,14 +17,14 @@ ENV_NAME = 'CartPole-v0'
 
 parser = argparse.ArgumentParser(description="CEM vs. PROPS")
 parser.add_argument("--model", default="simple")
-parser.add_argument("--train_interval_cem", default=50)
-parser.add_argument("--batch_size_cem", default=50)
-parser.add_argument("--steps_cem", default=100000)
-parser.add_argument("--batch_size_props", default=500)
-parser.add_argument("--steps_props", default=100000)
-parser.add_argument("--trunc_thres", default=1)
-parser.add_argument("--Lmax", default=10)
-parser.add_argument("--delta", default=0.05)
+parser.add_argument("--train_interval_cem", default=500, type=int)
+parser.add_argument("--batch_size_cem", default=500, type=int)
+parser.add_argument("--steps_cem", default=100000, type=int)
+parser.add_argument("--batch_size_props", default=500, type=int)
+parser.add_argument("--steps_props", default=100000, type=int)
+parser.add_argument("--trunc_thres", default=1, type=float)
+parser.add_argument("--Lmax", default=10, type=int)
+parser.add_argument("--delta", default=0.05, type=float)
 
 def main(options):
     # store args
@@ -47,10 +47,10 @@ def main(options):
     nb_actions = env.action_space.n
     obs_dim = env.observation_space.shape[0]
     
-    model = initModel(model_type)
+    model = initModel(model_type, nb_actions, env.observation_space.shape)
     memory = initMemory()
     
-    cem = CEMAgent(model=model, nb_actions=nb_actions, memory=memory, batch_size=batch_size_cem, nb_steps_warmup=2000, train_interval=train_interval_cem, elite_frac=0.05)
+    cem = CEMAgent(model=model, nb_actions=nb_actions, memory=memory, batch_size=batch_size_cem, nb_steps_warmup=1000, train_interval=train_interval_cem, elite_frac=0.05)
     cem.compile()
     callback_cem = cem.fit(env, nb_steps=steps_cem, visualize=False, verbose=1)
     cem.save_weights('cem_dumps/cem_{}_{}_ti_{}_bs_{}_steps_{}.h5f'.format(ENV_NAME, model_type, train_interval_cem, batch_size_cem, steps_cem), overwrite=True)
@@ -65,10 +65,10 @@ def main(options):
     nb_actions = env.action_space.n
     obs_dim = env.observation_space.shape[0]
     
-    model = initModel(model_type)
+    model = initModel(model_type, nb_actions, env.observation_space.shape)
     memory = initMemory()
 
-    bound_opts = {'analytic_jac' : True, 'normalize_weights' : True, 'truncate_weights' : True, 'truncate_thresh' : trunc_thresh}
+    bound_opts = {'analytic_jac' : True, 'normalize_weights' : True, 'truncate_weights' : True, 'truncate_thresh' : trunc_thres}
 
     props = PROPSAgent(model=model, nb_actions=nb_actions, memory=memory, Lmax=Lmax, delta=delta, bound_opts=bound_opts, batch_size=batch_size_props)
     props.compile()
@@ -92,15 +92,15 @@ def initMemory():
     memory = EpisodeParameterMemory(limit=1000, window_length=1)
     return memory
 
-def initModel(model_type):
+def initModel(model_type, nb_actions, obs_space_shape):
     model = Sequential()
     if model_type == "simple":
-        model.add(Flatten(input_shape=(1,) + env.observation_space.shape))
+        model.add(Flatten(input_shape=(1,) + obs_space_shape))
         model.add(Dense(nb_actions))
         model.add(Activation('softmax'))
     else:
         model = Sequential()
-        model.add(Flatten(input_shape=(1,) + env.observation_space.shape))
+        model.add(Flatten(input_shape=(1,) + obs_space_shape))
         model.add(Dense(16))
         model.add(Activation('relu'))
         model.add(Dense(16))
