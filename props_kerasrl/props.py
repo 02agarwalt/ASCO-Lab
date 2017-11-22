@@ -13,9 +13,9 @@ from scipy.optimize import minimize
 import numpy.matlib
 
 class PROPSAgent(Agent):
-    def __init__(self, model, nb_actions, memory, th_mean=None, batch_size=50, nb_steps_warmup=1000,
-                 train_interval=50, memory_interval=1, delta=0.05, bound_opts={},
-                 n_iter=10000, Lmax=10, initial_std=1.0, **kwargs):
+    def __init__(self, model, nb_actions, memory, th_mean=None, batch_size=500,
+                 delta=0.05, bound_opts={},
+                 Lmax=10, initial_std=1.0, **kwargs):
         super(PROPSAgent, self).__init__(**kwargs)
 
         # Related objects
@@ -31,11 +31,7 @@ class PROPSAgent(Agent):
             th_mean = np.zeros(self.num_weights)
         self.nb_actions = nb_actions
         self.batch_size = batch_size
-        self.nb_steps_warmup = nb_steps_warmup
-        self.train_interval = train_interval
-        self.memory_interval = memory_interval
         self.delta = delta
-        self.n_iter = n_iter
         self.Lmax = Lmax
         self.curr_th_mean = th_mean
         self.curr_th_std = np.ones_like(th_mean) * initial_std
@@ -126,7 +122,7 @@ class PROPSAgent(Agent):
     @property
     def layers(self):
         return self.model.layers[:]
-         
+
     def backward(self, reward, terminal):
 	#print(self.episode)
         self.memory.append(self.recent_observation, self.recent_action, reward, terminal, training=self.training)
@@ -141,8 +137,6 @@ class PROPSAgent(Agent):
             params = self.get_weights_flat(self.model.get_weights())
             self.memory.finalize_episode(params)
 
-            #if self.step > self.nb_steps_warmup and self.episode % self.train_interval == 0:
-            #if len(self.memory.total_rewards.data) == self.batch_size:
             if self.episode % self.batch_size == 0 and self.episode > 0:
                 params, reward_totals = self.memory.sample(self.batch_size)
 		#print(params, reward_totals)
