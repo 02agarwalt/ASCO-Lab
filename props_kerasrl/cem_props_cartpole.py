@@ -16,7 +16,7 @@ import pandas as pd
 ENV_NAME = 'CartPole-v0'
 
 parser = argparse.ArgumentParser(description="CEM vs. PROPS")
-parser.add_argument("--model", default="simple")
+parser.add_argument("--model_type", default="simple")
 parser.add_argument("--train_interval_cem", default=500, type=int)
 parser.add_argument("--batch_size_cem", default=500, type=int)
 parser.add_argument("--steps_cem", default=100000, type=int)
@@ -28,7 +28,7 @@ parser.add_argument("--delta", default=0.05, type=float)
 
 def main(options):
     # store args
-    model_type = options.model
+    model_type = options.model_type
     train_interval_cem = options.train_interval_cem
     batch_size_cem = options.batch_size_cem
     steps_cem = options.steps_cem
@@ -52,7 +52,7 @@ def main(options):
     
     cem = CEMAgent(model=model, nb_actions=nb_actions, memory=memory, batch_size=batch_size_cem, nb_steps_warmup=1000, train_interval=train_interval_cem, elite_frac=0.05)
     cem.compile()
-    callback_cem = cem.fit(env, nb_steps=steps_cem, visualize=False, verbose=1)
+    callback_cem = cem.fit(env, nb_steps=steps_cem, visualize=False, verbose=0)
     cem.save_weights('cem_dumps/cem_{}_{}_ti_{}_bs_{}_steps_{}.h5f'.format(ENV_NAME, model_type, train_interval_cem, batch_size_cem, steps_cem), overwrite=True)
     #cem.test(env, nb_episodes=1, visualize=False)
 
@@ -72,7 +72,7 @@ def main(options):
 
     props = PROPSAgent(model=model, nb_actions=nb_actions, memory=memory, Lmax=Lmax, delta=delta, bound_opts=bound_opts, batch_size=batch_size_props)
     props.compile()
-    callback_props = props.fit(env, nb_steps=steps_props, visualize=False, verbose=1)
+    callback_props = props.fit(env, nb_steps=steps_props, visualize=False, verbose=0)
     props.save_weights('props_dumps/props_{}_{}_bs_{}_steps_{}_thres_{}_Lmax_{}_delta_{}.h5f'.format(ENV_NAME, model_type, batch_size_props, steps_props, trunc_thres, Lmax, delta), overwrite=True)
     #props.test(env, nb_episodes=1, visualize=False)
 
@@ -86,7 +86,7 @@ def main(options):
 
     plt.legend(['cem', 'props'], loc='upper left')
     #plt.show()
-    plt.savefig('plots/{}_{}_bs_{}_thres_{}_Lmax_{}_delta_{}.h5f'.format(ENV_NAME, model_type, batch_size_props, trunc_thres, Lmax, delta))
+    plt.savefig('plots/{}_{}_bs_{}_thres_{}_Lmax_{}_delta_{}.jpeg'.format(ENV_NAME, model_type, batch_size_props, trunc_thres, Lmax, delta))
 
 def initMemory():
     memory = EpisodeParameterMemory(limit=1000, window_length=1)

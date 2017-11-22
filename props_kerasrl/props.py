@@ -143,7 +143,7 @@ class PROPSAgent(Agent):
                 ths = np.array(params)
                 ys = np.array(reward_totals)
                 #ys_trans = -np.array([ys])
-		ys_trans = (200 - np.array([ys]))/20
+		ys_trans = 200 - np.array([ys])
                 ths_trans = np.array([ths]).transpose(2, 1, 0)
 
                 if self.yss is None:
